@@ -1,0 +1,11 @@
+# ignore
+.ipynb_checkpoints/
+*.pptx
+__pycache__/
+.idea/
+.log
+env/
+
+# tmp ignore
+log/
+checkpoint/

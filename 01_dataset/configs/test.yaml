@@ -1,0 +1,4 @@
+# test.yaml
+DATA:
+    BATCH_SIZE: 16
+    
