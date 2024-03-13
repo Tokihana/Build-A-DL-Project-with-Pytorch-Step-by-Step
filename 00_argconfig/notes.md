@@ -1,4 +1,4 @@
-![](D:\College\projects\Build A Deep Learning Project Step by Step\00_argconfig\.assets\图片1.png)
+![](.\.assets\图片1.png)
 
 # Unit Test
 
