@@ -8,6 +8,17 @@
   - [x] transform
   - [x] dataset
   - [x] loader
-- [ ] Metrics
-- [ ] Model Save and Load
-- [ ] Training
+- [ ] main() structure & utils
+  - [x] main() structure
+  - [x] accuracy & Avgmeter
+  - [x] Model save & load
+  - [ ] flops
+  - [x] num_params
+  - [ ] throughput
+- [ ] Training & Test
+  - [ ] criterion
+  - [ ] optimizer
+  - [ ] schedular
+  - [ ] train_one_epoch
+  - [ ] validate
+

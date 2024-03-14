@@ -3,11 +3,12 @@
 *.pptx
 __pycache__/
 .idea/
-.log
+*.log
 env/
 env_related.md
 .git/
 .virtual_documents/
+.gitignore
 
 # tmp ignore
 log/
