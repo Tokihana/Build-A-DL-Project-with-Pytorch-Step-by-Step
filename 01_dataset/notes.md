@@ -1,12 +1,6 @@
-> this project is implement with pytorch
->
-> 这里以视觉为例
-
-
-
 # Blocks of loading data
 
-首先需要确定，所在领域内常用的数据集，这可以通过查阅领域内文献的datasets部分，并结合源码来确定。
+首先需要确定，所在领域内常用的数据集，可以通过查阅领域内文献的datasets部分，并结合源码来了解。
 
 一般来说，同个领域内，数据集的加载方式大差不差，只有一些细节、例如sampler、需要进行调整。
 
@@ -56,11 +50,67 @@
 
   通常来讲需要关注的参数包括：`sampler, batch_size, shuffle, num_workers, pin_memory, drop_last`
 
-  
 
-# 数据集加载框架
 
+
+## main utils
+
+```py
+# main.py
+from data.build import build_loader	
+
+def parse_option():
+    # parse args and config
+
+def main(config):
+    train_loader, test_loader = build_loader(config)
+    
+if __name__ == '__main__':
+    args, config = parse_option()
+    main(config)
 ```
 
+
+
+## configs
+
+数据集加载常用的config如下，对应每个模块需要的参数：
+
+```py
+# config.py
+## ----------------------------------------------
+# DATA settings
+## ----------------------------------------------
+_C.DATA = CN()
+# datasets configs
+# name of dataset, RAF-DB for default
+_C.DATA.DATASET = 'RAF-DB'
+# path to dataset
+_C.DATA.DATA_PATH = './datasets/RAF-DB'
+# loader configs
+# image size
+_C.DATA.IMAGE_SIZE = 224
+# batch size
+_C.DATA.BATCH_SIZE = 64
+# num of workers
+_C.DATA.NUM_WORKERS = 8
+# use pin memory or not
+_C.DATA.PIN_MEMORY = True
+```
+
+
+
+## build_dataset
+
+```py
+def build_dataset(is_train, config)
+```
+
+
+
+## build_loader
+
+```py
+def build_loader(config)
 ```
 

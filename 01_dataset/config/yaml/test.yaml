@@ -1,0 +1,6 @@
+# test.yaml
+DATA:
+    BATCH_SIZE: 4
+    DATASET: 'FERPlus'
+    DATA_PATH: '../../FERdatasets/FERPlus'
+    

@@ -5,6 +5,9 @@ __pycache__/
 .idea/
 .log
 env/
+env_related.md
+.git/
+.virtual_documents/
 
 # tmp ignore
 log/
