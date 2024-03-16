@@ -1,0 +1,19 @@
+SYSTEM:
+    PRINT_FREQ: 10
+DATA:
+    BATCH_SIZE: 32
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../FERdatasets/RAF-DB'
+
+MODEL:
+    ARCH: 'RepVGGplus-L2pse'
+    NUM_CLASS: 1000
+    RESUME: './checkpoint/RepVGGplus-L2pse.pth'
+    
+MODE:
+    FINETUNE: True
+    
+TRAIN:
+    CRITERION:
+        NAME: 'SoftTargetCE'
+    

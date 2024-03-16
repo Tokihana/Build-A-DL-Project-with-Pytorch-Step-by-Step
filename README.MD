@@ -16,9 +16,10 @@
   - [x] num_params
   - [ ] throughput
 - [ ] Training & Test
-  - [ ] criterion
-  - [ ] optimizer
-  - [ ] schedular
+  - [x] criterion
+  - [x] optimizer
+  - [x] schedular
+  - [x] validate
+  - [ ] finetune
   - [ ] train_one_epoch
-  - [ ] validate
 

@@ -1,0 +1,13 @@
+DATA:
+    BATCH_SIZE: 32
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../FERdatasets/RAF-DB'
+
+MODEL:
+    ARCH: 'IResNet50'
+    NUM_CLASS: 7
+    RESUME: './checkpoint/ir50.pth'
+    
+MODE:
+    FINETUNE: True
+    

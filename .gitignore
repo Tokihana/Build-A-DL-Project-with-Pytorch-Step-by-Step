@@ -9,6 +9,7 @@ env_related.md
 .git/
 .virtual_documents/
 .gitignore
+*.pth
 
 # tmp ignore
 log/
