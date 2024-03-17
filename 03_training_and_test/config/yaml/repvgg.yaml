@@ -1,9 +1,9 @@
 SYSTEM:
     PRINT_FREQ: 10
 DATA:
-    BATCH_SIZE: 32
-    DATASET: 'RAF-DB'
-    DATA_PATH: '../../FERdatasets/RAF-DB'
+    BATCH_SIZE: 48
+    DATASET: 'MiniTest'
+    DATA_PATH: '../../FERdatasets/MiniTest'
 
 MODEL:
     ARCH: 'RepVGGplus-L2pse'

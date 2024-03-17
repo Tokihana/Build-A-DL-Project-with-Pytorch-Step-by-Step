@@ -20,6 +20,7 @@
   - [x] optimizer
   - [x] schedular
   - [x] validate
-  - [ ] finetune
-  - [ ] train_one_epoch
+  - [x] train_one_epoch
+  - [ ] finetune - model load & freeze
+  - [ ] train
 

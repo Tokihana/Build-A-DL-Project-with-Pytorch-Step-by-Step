@@ -87,8 +87,8 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
     start = time.time()
     end = time.time()
     for idx, (images, targets) in enumerate(data_loader):
-        images = images.cuda(non_blocking=True)
-        targets = targets.cuda(non_blocking=True)
+        images = images.cuda()
+        targets = targets.cuda()
         
         if mix_fn is not None:
             images, targets = mix_fn(images, targets)
@@ -140,8 +140,8 @@ def validate(config, model, data_loader, logger):
     
     end = time.time()
     for idx, (images, targets) in enumerate(data_loader):
-        images = images.cuda(non_blocking=True)
-        targets = targets.cuda(non_blocking=True)
+        images = images.cuda()
+        targets = targets.cuda()
         
         if config.MODEL.ARCH == 'RepVGGplus-L2pse':
             output = model(images)['main']
