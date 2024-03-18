@@ -277,3 +277,20 @@ def conv_bn_relu(in_channels, out_channels, kernel_size, stride, padding, groups
 ![image-20240318114528799](C:\Users\wangj\AppData\Roaming\Typora\typora-user-images\image-20240318114528799.png)
 
 结合模型结构以及数据集输出（`num_class = 1000`），可推断`stage1_aux.3`就是要找的fc层。
+
+在加载权重的时候，不进行严格匹配：
+
+```py
+def load_finetune_weights(config, model, logger):
+    '''
+    assume that you have a pretrained model and need to fine-tune the last output layers
+    '''
+    checkpoint = torch.load(config.TRAIN.RESUME)
+    pops = _return_pop_keys(config, checkpoint)
+    for pop in pops:
+        checkpoint.pop(pop)
+    missing, unexcepted = model.load_state_dict(checkpoint, strict=False)
+    logger.info(f'FINETUNE Missing: {missing},\t Unexcepted: {unexcepted}\t')
+    return model
+```
+
