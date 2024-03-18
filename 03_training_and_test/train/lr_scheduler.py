@@ -38,6 +38,8 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
             warmup_t=warmup_steps,
             t_in_epochs=False,
         )
+    elif config.TRAIN.LR_SCHEDULER.NAME == 'exponential':
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=config.TRAIN.LR_SCHEDULER.GAMMA)
 
     return lr_scheduler
 

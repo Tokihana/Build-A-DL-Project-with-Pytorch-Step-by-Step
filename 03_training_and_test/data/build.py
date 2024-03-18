@@ -11,7 +11,7 @@ def build_loader(config):
     config.freeze()
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                sampler=ImbalancedDatasetSampler(train_dataset),
-                                               # shuffle=True, # not need to specified when use sampler
+                                               shuffle=True, # may not need to specified when use sampler
                                                batch_size=config.DATA.BATCH_SIZE,
                                                num_workers=config.DATA.NUM_WORKERS,
                                                pin_memory=config.DATA.PIN_MEMORY,

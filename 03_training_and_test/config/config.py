@@ -90,11 +90,13 @@ _C.TRAIN.CRITERION.LABEL_SMOOTHING = 0.1
 
 # LR scheduler
 _C.TRAIN.LR_SCHEDULER = CN()
-_C.TRAIN.LR_SCHEDULER.NAME = 'cosine'
+_C.TRAIN.LR_SCHEDULER.NAME = 'exponential'
 # Epoch interval to decay LR, used in StepLRScheduler
 _C.TRAIN.LR_SCHEDULER.DECAY_EPOCHS = 30
 # LR decay rate, used in StepLRScheduler
 _C.TRAIN.LR_SCHEDULER.DECAY_RATE = 0.1
+# Gamma for Expoential Scheduler
+_C.TRAIN.LR_SCHEDULER.GAMMA = 0.98
 
 # Optimizer
 _C.TRAIN.OPTIMIZER = CN()

@@ -17,7 +17,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/repvgg.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_RepVGGplus-L2pse_FINETUNE.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -27,13 +27,15 @@ def parse_option():
 def main():
     # load datasets
     train_loader, val_loader, mix_fn = build_loader(config)
-    logger.info('finished data loading')
+    logger.info(f'Train: {len(train_loader)}, Test: {len(val_loader)}')
     
     # create model, move to cuda, log parameters, flops
     model = create_model(args, config)
+    #for key in model.state_dict().keys():
+    #    logger.info(f'{key}: {model.state_dict()[key].shape}')
     model.cuda()
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f'number of parms: {n_parameters / (1024.0 * 1024.0)}M')
+    logger.info(f'number of parms: {n_parameters / (1024.0 * 1024.0):.2f}M')
     
     if hasattr(model, 'flops'):
         flops = model.flops()
@@ -41,6 +43,7 @@ def main():
     
     # build optimier
     optimizer = build_optimizer(config, model)
+    logger.info(f"LR: {optimizer.param_groups[0]['lr']}")
     
     # check if EVAL MODE or some other running MODE you need, such as THROUGHPUT_MODE
     if config.MODE.EVAL:
@@ -91,6 +94,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
     
     start = time.time()
     end = time.time()
+    
     for idx, (images, targets) in enumerate(data_loader):
         images = images.cuda()
         targets = targets.cuda()
@@ -113,7 +117,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        lr_scheduler.step_update(epoch*num_steps*idx)
+        #lr_scheduler.step_update(epoch*num_steps*idx)
         
         loss_avg.update(loss.item(), targets.size(0))
         batch_time.update(time.time() - end)
@@ -129,6 +133,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Mem {memory_used:.0f}MB')
+    lr_scheduler.step()
     epoch_time = time.time() - start
     logger.info(f'EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}')
         
@@ -154,7 +159,8 @@ def validate(config, model, data_loader, logger):
             output = model(images)
             
         loss = criterion(output, targets)
-        acc = top1_accuracy(output, targets)
+        # acc = top1_accuracy(output, targets)
+        acc = accuracy(output, targets, topk=(1, ))[0]
         loss_avg.update(loss.item(), targets.size(0))
         acc_avg.update(acc.item(), targets.size(0))
         

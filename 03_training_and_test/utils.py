@@ -69,6 +69,11 @@ def load_finetune_weights(config, model, logger):
     for pop in pops:
         checkpoint.pop(pop)
     missing, unexcepted = model.load_state_dict(checkpoint, strict=False)
+    for param in model.parameters():
+        if param in pops:
+            param.require_grad=True
+        else:
+            param.require_grad=False
     logger.info(f'FINETUNE Missing: {missing},\t Unexcepted: {unexcepted}\t')
     return model
 
