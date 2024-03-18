@@ -9,21 +9,24 @@ from thop import profile, clever_format
 def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
     logger.info(f'Loading checkpoint from {config.TRAIN.RESUME}')
     checkpoint = torch.load(config.TRAIN.RESUME, map_location='cpu')
-    if 'model' in checkpoint:
-        checkpoint = checkpoint['model']
-    if 'state_dict' in checkpoint:
-        checkpoint = checkpoint['state_dict']
+    logger.info(checkpoint.keys())
+
+    if 'model' in checkpoint.keys():
+        model.load_state_dict(checkpoint['model'])
+    if 'state_dict' in checkpoint.keys():
+        model.load_state_dict(checkpoint['state_dict'])
     #logger.info(checkpoint.keys())
     max_acc = 0.0
-    if not config.MODE.EVAL and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+    if not config.MODE.EVAL and ('optimizer' in checkpoint.keys() and 'lr_scheduler' in checkpoint.keys() and 'epoch' in checkpoint.keys()):
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
         config.defrost()
-        config.TRAIN.EPOCH = checkpoint['epoch']
+        config.TRAIN.START_EPOCH = checkpoint['epoch']
         config.freeze()
         logger.info(f'Loaded checkpoint from {config.TRAIN.RESUME} successfully')
-        if 'max_acc' in checkpoint:
+        if 'max_acc' in checkpoint.keys():
             max_acc = checkpoint['max_acc'] 
+
     del checkpoint
     torch.cuda.empty_cache()
     return max_acc

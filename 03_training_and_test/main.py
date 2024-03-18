@@ -17,7 +17,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/IR50.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_RepVGGplus-L2pse_FINETUNE.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -64,13 +64,13 @@ def main():
         
     # whether needs to resume model?
     max_acc = 0.0
-    if not config.MODE.FINETUNE and config.TRAIN.RESUME: # training time model resume
+    if not config.MODE.FINETUNE and not config.TRAIN.RESUME == '': # training time model resume
         max_acc = load_checkpoint(config=config, model=model, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
     
     # start training
     logger.info(f'Start training')
     start_time = time.time()
-    
+
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         if epoch % config.SYSTEM.SAVE_FREQ == 0 or epoch >= (config.TRAIN.EPOCHS-5):
@@ -118,7 +118,8 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        #lr_scheduler.step_update(epoch*num_steps*idx)
+        if config.TRAIN.LR_SCHEDULER == 'cosine':
+            lr_scheduler.step_update(epoch*num_steps*idx)
         
         loss_avg.update(loss.item(), targets.size(0))
         batch_time.update(time.time() - end)
@@ -134,7 +135,8 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Mem {memory_used:.0f}MB')
-    lr_scheduler.step()
+    if config.TRAIN.LR_SCHEDULER == 'exponential':
+        lr_scheduler.step()
     epoch_time = time.time() - start
     logger.info(f'EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}')
         
