@@ -199,3 +199,81 @@ validate不需要更新参数，所以要加上`torch.no_grad()`。
    - AvgMeter
    - log
 3. 返回loss和metric的均值
+
+
+
+## train_one_epoch
+
+流程如下：
+
+1. `optimizer.zero_grad()`清理累积梯度
+2. 迭代train_loader
+   - 计算loss，求avg
+   - `optimizer.zero_grad()`
+   - `loss.backward()`
+   - `optimizer.step()` 更新梯度
+   - `scheduler.step()`调整lr
+
+## train
+
+在每个epoch，调用一次`train_one_epoch`和`validate`，并保存checkpoint，包括：
+
+1. 模型的`state_dict`
+2. optimizer的`state_dict`
+3. scheduler的`state_dict`
+4. 当前的max_mertric
+5. 当前的epoch
+6. 模型的相关配置
+
+
+
+
+
+## finetune
+
+finetune与train最大的区别在于，需要在运行train block之前，先做以下处理：
+
+1. 读取checkpoint，并将与`num_class`的权重pop掉
+2. freeze与`num_class`无关的权重
+
+首先检查模型文件，确定和输出相关的part，并在预训练的checkpoint中检查keys，通过keys的名称进行筛选，例如寻找名称含有`linear`的权重
+
+```py
+checkpoint = torch.load(PATH)
+has_linear = [key for key in checkpoint.keys() if 'linear' in key]
+```
+
+这个方法不一定有效，因为这里的名字是模型类成员的命名，如果模型的命名比较混乱，通过名称检索很可能找不到想要的权重。
+
+以RepVGGplus为例，这个模型的输出相对复杂，除了最后的fc外，还对三个stage分别做了增强输出，这三个增强输出的fc没有特别命名，所以难以通过名称进行检索。
+
+可以结合Netron的可视化进行分析，首先知道这三个`stage_aux`的结构为
+
+```py
+class RepVGGplus(nn.Module):
+    def __init__(self):
+        super(RepVGGplus, self).__init__()
+        ...
+        self.stage1_aux = self._build_aux_for_stage(self.stage1)
+        self.stage2_aux = self._build_aux_for_stage(self.stage2)
+        self.stage3_first_aux = self._build_aux_for_stage(self.stage3_first)
+        ...
+def _build_aux_for_stage(self, stage):
+    stage_out_channels = list(stage.blocks.children())[-1].rbr_dense.conv.out_channels
+    downsample = conv_bn_relu(in_channels=stage_out_channels, out_channels=stage_out_channels, kernel_size=3, stride=2, padding=1)
+    fc = nn.Linear(stage_out_channels, self.num_classes, bias=True)
+    return nn.Sequential(downsample, nn.AdaptiveAvgPool2d(1), nn.Flatten(), fc)
+def conv_bn_relu(in_channels, out_channels, kernel_size, stride, padding, groups=1):
+    result = nn.Sequential()
+    result.add_module('conv', nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
+                                                  kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=False))
+    result.add_module('bn', nn.BatchNorm2d(num_features=out_channels))
+    result.add_module('relu', nn.ReLU())
+    return result
+```
+
+以stage1_aux为例，其可视化如下：
+
+![image-20240318114528799](C:\Users\wangj\AppData\Roaming\Typora\typora-user-images\image-20240318114528799.png)
+
+结合模型结构以及数据集输出（`num_class = 1000`），可推断`stage1_aux.3`就是要找的fc层。

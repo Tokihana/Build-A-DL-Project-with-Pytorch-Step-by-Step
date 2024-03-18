@@ -21,6 +21,6 @@
   - [x] schedular
   - [x] validate
   - [x] train_one_epoch
+  - [x] train
   - [ ] finetune - model load & freeze
-  - [ ] train
 

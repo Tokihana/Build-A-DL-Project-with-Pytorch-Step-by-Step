@@ -11,14 +11,13 @@ from timm.utils import accuracy, AverageMeter
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
-from utils import save_checkpoint, load_checkpoint, top1_accuracy
-from model.repvggplus import create_RepVGGplus_by_name
+from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights
+from model import create_model
 
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/test.yaml', type=str, help='path to config yaml')
-    parser.add_argument('--log', default='./log', type=str, help='path to log')
+    parser.add_argument('--config', default='./config/yaml/repvgg.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -27,14 +26,14 @@ def parse_option():
 
 def main():
     # load datasets
-    train_loader, test_loader, mixup_fn = build_loader(config)
+    train_loader, val_loader, mix_fn = build_loader(config)
     logger.info('finished data loading')
     
     # create model, move to cuda, log parameters, flops
-    model = create_RepVGGplus_by_name(config.MODEL.ARCH, deploy=False, use_checkpoint=args.use_checkpoint)
+    model = create_model(args, config)
     model.cuda()
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f'number of parms: {n_parameters}')
+    logger.info(f'number of parms: {n_parameters / (1024.0 * 1024.0)}M')
     
     if hasattr(model, 'flops'):
         flops = model.flops()
@@ -45,12 +44,13 @@ def main():
     
     # check if EVAL MODE or some other running MODE you need, such as THROUGHPUT_MODE
     if config.MODE.EVAL:
-        load_weights(model, config.MODEL.RESUME)
-        vaildate()
+        load_weights(config, model, loggr)
+        acc, loss = validate(config, model, val_loader, logger)
+        logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
         return
     
     if config.MODE.FINETUNE:
-        return
+        model = load_finetune_weights(config, model, logger)
     
     # build scheduler
     lr_scheduler = build_scheduler(config, optimizer, len(train_loader))
@@ -60,21 +60,26 @@ def main():
         
     # whether needs to resume model?
     max_acc = 0.0
-    if config.TRAIN.RESUME:
+    if not config.MODE.FINETUNE and config.TRAIN.RESUME: # training time model resume
         max_acc = load_checkpoint(config=config, model=model, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
     
     # start training
-    
-    logger.info('Start training')
+    logger.info(f'Start training')
     start_time = time.time()
+    
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
-        train_one_epoch()
-        if epoch % config.SYSTEM.SAVE_FREQ == 0:
+        train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
+        if epoch % config.SYSTEM.SAVE_FREQ == 0 or epoch >= (config.TRAIN.EPOCHS-5):
             save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         if val_loader is not None:
-            validate()
-            #if max_accuracy updated:
-            #    save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
+            acc, loss = validate(config, model, val_loader, logger)
+            max_acc = max(max_acc, acc)
+            logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
+            if max_acc == acc: # max_acc updated
+                save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
+    
+    total_time = time.time() - start_time
+    logger.info(f'Total training time: {str(datetime.timedelta(seconds=int(total_time)))}')
     
 def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_scheduler, epoch, mix_fn, logger):
     model.train()
@@ -169,7 +174,7 @@ def validate(config, model, data_loader, logger):
     
 if __name__ == '__main__':
     args, config = parse_option()
-    logger = create_logger('log', name='testlog.log')
+    logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     main()
     
     

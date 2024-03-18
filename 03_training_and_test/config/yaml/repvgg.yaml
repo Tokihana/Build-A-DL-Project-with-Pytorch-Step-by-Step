@@ -8,12 +8,14 @@ DATA:
 MODEL:
     ARCH: 'RepVGGplus-L2pse'
     NUM_CLASS: 1000
-    RESUME: './checkpoint/RepVGGplus-L2pse.pth'
     
 MODE:
     FINETUNE: True
     
 TRAIN:
+    START_EPOCH: 8
+    EPOCHS: 10
+    RESUME: './model/pretrain/RepVGGplus-L2pse.pth'
     CRITERION:
         NAME: 'SoftTargetCE'
     

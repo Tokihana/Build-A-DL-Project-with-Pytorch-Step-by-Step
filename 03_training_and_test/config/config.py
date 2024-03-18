@@ -1,4 +1,5 @@
 # config.py
+import os
 from yacs.config import CfgNode as CN
 
 # root node
@@ -8,10 +9,12 @@ _C = CN()
 # SYSTEM settings
 ## ----------------------------------------------
 _C.SYSTEM = CN()
-# log path
-_C.SYSTEM.LOG = './log'
-# checkpoint path
-_C.SYSTEM.CHECKPOINT = './checkpoint/test'
+# emperimental information
+_C.SYSTEM.EXPERIMENT_PATH = './results/minitest'
+# log path, joint with experiment path
+_C.SYSTEM.LOG = 'log'
+# checkpoint path, joint with experiment path
+_C.SYSTEM.CHECKPOINT = 'checkpoint'
 # save frequency
 _C.SYSTEM.SAVE_FREQ = 20
 # print frequency
@@ -44,8 +47,6 @@ _C.MODEL = CN()
 _C.MODEL.ARCH = 'IResNet50'
 # default nb_classes
 _C.MODEL.NUM_CLASS = 7
-# resume checkpoint
-_C.MODEL.RESUME = ''
 
 
 ## ----------------------------------------------
@@ -77,6 +78,8 @@ _C.TRAIN.BASE_LR = 3.5e-5
 _C.TRAIN.WARMUP_LR = 0.0
 # min lr
 _C.TRAIN.MIN_LR = 0
+# resume checkpoint path
+_C.TRAIN.RESUME = ''
 
 # criterion
 _C.TRAIN.CRITERION = CN()
@@ -121,5 +124,20 @@ def get_config(args):
     config = get_config_default()
     config.defrost()
     config.merge_from_file(args.config)
+
+    # build experiment folder
+    if not config.SYSTEM.EXPERIMENT_PATH == '':
+        if not os.path.exists(config.SYSTEM.EXPERIMENT_PATH):
+            os.makedirs(config.SYSTEM.EXPERIMENT_PATH)
+        config.SYSTEM.LOG = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.LOG)
+        config.SYSTEM.CHECKPOINT = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.CHECKPOINT)
+        if not os.path.exists(config.SYSTEM.CHECKPOINT):
+            os.makedirs(config.SYSTEM.CHECKPOINT) 
+        if not os.path.exists(config.SYSTEM.LOG):
+            os.makedirs(config.SYSTEM.LOG)
+    
     config.freeze()
+    
+    return config
+    
     return config
