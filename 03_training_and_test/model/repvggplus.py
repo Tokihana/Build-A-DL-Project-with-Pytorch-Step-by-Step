@@ -209,22 +209,28 @@ class RepVGGplus(nn.Module):
     def forward(self, x):
         out = self.stage0(x)
         out = self.stage1(out)
-        stage1_aux = self.stage1_aux(out)
+        if not self.deploy:
+            stage1_aux = self.stage1_aux(out)
         out = self.stage2(out)
-        stage2_aux = self.stage2_aux(out)
+        if not self.deploy:
+            stage2_aux = self.stage2_aux(out)
         out = self.stage3_first(out)
-        stage3_first_aux = self.stage3_first_aux(out)
+        if not self.deploy:
+            stage3_first_aux = self.stage3_first_aux(out)
         out = self.stage3_second(out)
         out = self.stage4(out)
         y = self.gap(out)
         y = self.flatten(y)
         y = self.linear(y)
-        return {
-            'main': y,
-            'stage1_aux': stage1_aux,
-            'stage2_aux': stage2_aux,
-            'stage3_first_aux': stage3_first_aux,
-        }
+        if self.deploy:
+            return y
+        else:
+            return {
+                'main': y,
+                'stage1_aux': stage1_aux,
+                'stage2_aux': stage2_aux,
+                'stage3_first_aux': stage3_first_aux,
+            }
 
     def switch_repvggplus_to_deploy(self):
         for m in self.modules():

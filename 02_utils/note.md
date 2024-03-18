@@ -164,3 +164,18 @@ def save_checkpoint(config, model, epoch, max_acc, optimizer, lr_scheduler, logg
 n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 ```
 
+
+
+## flops
+
+调用thop库
+
+```py
+from thop import profile
+def compute_param_flop():
+    model = pyramid_trans_expr2()
+    img = torch.rand(size=(1,3,224,224))
+    flops, params = profile(model, inputs=(img,))
+    print(f'flops:{flops/1024**3}G,params:{params/1024**2}M')
+```
+

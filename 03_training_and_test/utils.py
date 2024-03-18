@@ -1,8 +1,10 @@
 # utils.py
 # inline dependencies
 import os
+import time
 # third-party dependencies
 import torch
+from thop import profile, clever_format
 
 def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
     logger.info(f'Loading checkpoint from {config.TRAIN.RESUME}')
@@ -84,3 +86,31 @@ def _return_pop_keys(config, checkpoint):
         pop_keys = None
     return pop_keys
                     
+@torch.no_grad()    
+def compute_flop_params(config, model, logger):
+    img = torch.rand((1, 3, 224, 224))
+    if 'RepVGG' in config.MODEL.ARCH:
+        model.switch_repvggplus_to_deploy()
+    flops, params = profile(model, inputs=(img.cuda(),))
+    flops, params = clever_format([flops, params], '%.3f')
+    logger.info(f'number of parms: {params}\t FLOPs:{flops}')
+    del img
+    
+@torch.no_grad()
+def throughput(model, data_loader, logger):
+    model.eval()
+
+    for idx, (images, _) in enumerate(data_loader):
+        images = images.cuda(non_blocking=True)
+
+        batch_size = images.shape[0]
+        for i in range(50):
+            model(images)
+        logger.info(f"throughput averaged with 30 times")
+        tic1 = time.time()
+        for i in range(30):
+            model(images)
+        tic2 = time.time()
+        throughput = 30 * batch_size / (tic2 - tic1)
+        logger.info(f"batch_size {batch_size} throughput {throughput}")
+        return

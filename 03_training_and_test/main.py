@@ -11,13 +11,13 @@ from timm.utils import accuracy, AverageMeter
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
-from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights
+from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput
 from model import create_model
 
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_RepVGGplus-L2pse_FINETUNE.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/IR50.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -31,15 +31,16 @@ def main():
     
     # create model, move to cuda, log parameters, flops
     model = create_model(args, config)
-    #for key in model.state_dict().keys():
-    #    logger.info(f'{key}: {model.state_dict()[key].shape}')
     model.cuda()
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f'number of parms: {n_parameters / (1024.0 * 1024.0):.2f}M')
     
-    if hasattr(model, 'flops'):
-        flops = model.flops()
-        logger.info(f'number of GFLOPs:{flops / 1e9}')
+    # logger flop and params
+    if config.MODE.FLOP:
+        compute_flop_params(config, model, logger)
+        return
+    
+    if config.MODE.THROUGHPUT:
+        throughput(model, val_loader, logger)
+        return
     
     # build optimier
     optimizer = build_optimizer(config, model)

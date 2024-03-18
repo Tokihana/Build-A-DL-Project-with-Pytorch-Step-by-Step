@@ -4,16 +4,16 @@ SYSTEM:
     EXPERIMENT_PATH: './results/RAF-DB_RepVGGplus-L2pse_FINETUNE'
     
 DATA:
-    BATCH_SIZE: 96
+    BATCH_SIZE: 32
     DATASET: 'RAF-DB'
-    DATA_PATH: '../../autodl-tmp/RAF-DB'
+    DATA_PATH: '../../FERdatasets/RAF-DB'
 
 MODEL:
     ARCH: 'RepVGGplus-L2pse'
     NUM_CLASS: 7
     
 MODE:
-    FINETUEN: True
+    FLOP: True
     
 TRAIN:
     EPOCHS: 200

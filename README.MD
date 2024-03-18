@@ -12,15 +12,15 @@
   - [x] main() structure
   - [x] accuracy & Avgmeter
   - [x] Model save & load
-  - [ ] flops
+  - [x] flops
   - [x] num_params
   - [ ] throughput
-- [ ] Training & Test
+- [x] Training & Test
   - [x] criterion
   - [x] optimizer
   - [x] schedular
   - [x] validate
   - [x] train_one_epoch
   - [x] train
-  - [ ] finetune - model load & freeze
+  - [x] finetune - model load & freeze
 

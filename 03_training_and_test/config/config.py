@@ -59,6 +59,8 @@ _C.MODE.EVAL = False
 _C.MODE.FINETUNE = False
 # THROUGHPUT flags
 _C.MODE.THROUGHPUT = False
+# FLOP flags
+_C.MODE.FLOP = False
 
 ## ----------------------------------------------
 # TRAINING settings
